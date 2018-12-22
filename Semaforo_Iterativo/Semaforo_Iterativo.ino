@@ -15,11 +15,11 @@ int EstadoBotao = 0;
 unsigned long tempo_espera;
 
 
-void aciona () {
+void acionaSemaforo () {
   /* Ciclo de Abertura e Fechamento do Semaforo
    * Semaforo para carros fecha -> Semaforo para pedestres abre
    * Semaforo para pedestres fecha -> Semaforo para carros abre
-  */
+   */
   digitalWrite (led_carroVerde, LOW);
   digitalWrite (led_carroAmarelo, HIGH);  // sinal amarelo pra carros por 2seg
   delay(2000);
@@ -107,16 +107,25 @@ void loop () {
   lcd.print("para atravessar");
   
   EstadoBotao = digitalRead(botao);
-  if (EstadoBotao == HIGH && millis()-tempo_espera>=20000) {  // condicao para acionamento imediato
+  if (EstadoBotao == HIGH && millis()-tempo_espera >= 20000) {
+    /* 
+     * Acionamento Imediato
+     * aciona o ciclo de mudança das luzes do semaforo imediatamente
+     */
     lcd.clear();
     lcd.setCursor(4,0);
     lcd.print("Aguarde"); // exibe mensagem "Aguarde"
-    aciona();             // mudanca de luzes
+    acionaSemaforo();     // mudanca de luzes
   }
-  else if (EstadoBotao == HIGH && millis()-tempo_espera<20000) { //condicao de espera pra acionamento
+  else if (EstadoBotao == HIGH && millis()-tempo_espera < 20000) {
+    /*
+     * Acionamento Retardado
+     * ciclo do semaforo foi realizado recentemente, logo deve-se esperar um periodo para que se inicie novamente
+     */
     lcd.clear();          // limpa a mensagem "aperte um botao para atravessar"
     lcd.setCursor(4,0);
     lcd.print("Aguarde"); // exibe mensagem "Aguarde"
+    
     lcd.setCursor(7,1);
     lcd.print("0");
     mudatempo(7); delay(1000); // contagem de tempo para abrir o sinal
@@ -127,6 +136,6 @@ void loop () {
     mudatempo(2); delay(1000);
     mudatempo(1); delay(1000);
     mudatempo(0);
-    aciona(); // mudanca de luzes
+    acionaSemaforo();           // mudanca de luzes
   }
 }
