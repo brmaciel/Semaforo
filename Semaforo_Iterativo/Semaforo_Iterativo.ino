@@ -13,7 +13,8 @@ LiquidCrystal lcd(0, 1, 3, 5, 6, 7);
 /* Definição de variáveis auxiliares */
 int EstadoBotao = 0;
 unsigned long tempo_espera;
-
+const unsigned int tempo_aguardeParaAtravessar = 11;  // tempo (seg) que os pedestres devem aguardar para mudanca do semaforo no acionamento retardado
+const unsigned int tempo_travessiaPedestres = 7000; // tempo que os pedestres tem para atravessar em milliseg
 
 void acionaSemaforo () {
   /* Ciclo de Abertura e Fechamento do Semaforo
@@ -28,7 +29,7 @@ void acionaSemaforo () {
   delay(1000);
   digitalWrite (led_pedVermelho, LOW);    // sinal de pedestres abre 1seg após sinal de carros fechar
   atravessar();
-  mudatempo(0); //sinal de pedestres ira fechar
+  mudatempo(0);   // sinal de pedestres ira fechar
   digitalWrite (led_pedVerde, LOW);
   digitalWrite (led_pedVermelho, HIGH); //sinal de pedestres fecha
   lcd.clear();                          //retira a mensagem de atravessar
@@ -44,10 +45,9 @@ void atravessar() {
   digitalWrite (led_pedVerde, HIGH); // semaforo de pedestres abre
   lcd.setCursor(3,0);
   lcd.print("Atravesse");     // exibe mensagem "Atrevesse"
-  lcd.setCursor(7,1);
-  lcd.print(0);
-  mudatempo(5);               //exibe mensagem que falta 5 seg para fechar o sinal de pedestres
-  for (int y=0; y<15; y++) {  //luz verde pedestre aceso constante e buzzer apita por 3 seg
+
+  mudatempo(5);               // exibe mensagem que falta 5 seg para fechar o sinal de pedestres
+  for (int y=0; y<15; y++) {  // luz verde pedestre aceso constante e buzzer apita por 3 seg
     digitalWrite (buzzer, HIGH);
     delay(100);
     digitalWrite (buzzer, LOW);
@@ -77,10 +77,17 @@ void atravessar() {
   }
 }
 
-void mudatempo(int a) {
+void mudatempo(int tempo) {
   /* Funcao que exibe no display o tempo */
-  lcd.setCursor(8,1);
-  lcd.print(a);
+  if (tempo >=10) {
+    lcd.setCursor(7,1);
+    lcd.print(tempo);
+  } else {
+    lcd.setCursor(7,1);
+    lcd.print("0");
+    lcd.setCursor(8,1);
+    lcd.print(tempo);
+  }
 }
 
 
@@ -108,8 +115,7 @@ void loop () {
   
   EstadoBotao = digitalRead(botao);
   if (EstadoBotao == HIGH && millis()-tempo_espera >= 20000) {
-    /* 
-     * Acionamento Imediato
+    /* Acionamento Imediato
      * aciona o ciclo de mudança das luzes do semaforo imediatamente
      */
     lcd.clear();
@@ -118,24 +124,16 @@ void loop () {
     acionaSemaforo();     // mudanca de luzes
   }
   else if (EstadoBotao == HIGH && millis()-tempo_espera < 20000) {
-    /*
-     * Acionamento Retardado
+    /* Acionamento Retardado
      * ciclo do semaforo foi realizado recentemente, logo deve-se esperar um periodo para que se inicie novamente
      */
     lcd.clear();          // limpa a mensagem "aperte um botao para atravessar"
     lcd.setCursor(4,0);
     lcd.print("Aguarde"); // exibe mensagem "Aguarde"
-    
-    lcd.setCursor(7,1);
-    lcd.print("0");
-    mudatempo(7); delay(1000); // contagem de tempo para abrir o sinal
-    mudatempo(6); delay(1000);
-    mudatempo(5); delay(1000);
-    mudatempo(4); delay(1000);
-    mudatempo(3); delay(1000);
-    mudatempo(2); delay(1000);
-    mudatempo(1); delay(1000);
-    mudatempo(0);
-    acionaSemaforo();           // mudanca de luzes
+    for (int tempo = tempo_aguardeParaAtravessar; tempo >= 0; tempo--) {
+      mudatempo(tempo);
+      delay(1000);
+    }
+    acionaSemaforo();     // mudanca de luzes
   }
 }
